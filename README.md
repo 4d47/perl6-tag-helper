@@ -16,7 +16,6 @@ Basically like the Html class described on [slide 37][2] of the [Perl 6: beyond 
 
 ## Ideas
 
-- Make @.void-elements and @.boolean-attributes lookup case insensitive
 - Its probably best to not output everything if very large gist
 - use the power of macros and port [hiccup][4]
 
