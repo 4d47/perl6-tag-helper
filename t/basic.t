@@ -36,10 +36,26 @@ my $tag = Tag.new;
     is $tag.p($tag.img), '<p><img></p>';
 }
 
+my token start_tag { \< }
+my token end_tag   { \> }
 {
     # named parameters means tag attributes
     is $tag.hr(:class<foo>), '<hr class="foo">';
-    is $tag.img(:src<a.jpg>, :alt('1 > 2')), '<img src="a.jpg" alt="1 &gt; 2">';
+    my token tag_name { img }
+    my token src_attr { src\=\"a.jpg\" }
+    my token alt_attr { alt\=\"1' '\&gt\;' '2\" }
+    # attributes in any order but only one of each
+    my token attrs {
+       [
+         <src_attr> | <alt_attr>
+       ] * % ' ' <?{ 1 == all %($/).values }>
+    }
+    my token img_tag {
+        <start_tag><tag_name>' '<attrs><end_tag>
+    }
+    my $tag_str = $tag.img(:src<a.jpg>, :alt('1 > 2')).Str;
+    like $tag_str, /<attrs>/;
+    like $tag_str, /<img_tag>/;
 }
 
 {
@@ -77,7 +93,20 @@ my $tag = Tag.new;
 {
     # methods can be called statically
     is Tag.b('hello'), '<b>hello</b>';
-    is Tag.begin_form(:action<.>, :method<POST>), '<form action="." method="POST">';
+
+    my token tag_name { form }
+    my token meth_attr { method\=\"POST\" }
+    my token action_attr { action\=\"\.\" }
+    # attributes in any order but only one of each
+    my token attrs {
+       [
+         <meth_attr> | <action_attr>
+       ] * % ' ' <?{ 1 == all %($/).values }>
+    }
+    my token form_tag {
+        <start_tag><tag_name>' '<attrs><end_tag>
+    }
+    like Tag.begin_form(:action<.>, :method<POST>).Str, /<form_tag>/;
 }
 
 {
